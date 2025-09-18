@@ -12,15 +12,17 @@ const app = express();
 app.use(express.json());
 
 // ----- Enable CORS for frontend -----
-// If FRONTEND_URL is not set, allow all origins (for testing)
+// Allows your frontend URL or all origins for testing
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || '*',
   })
 );
 
-// ----- MongoDB Product Model -----
+// ----- MongoDB Models -----
 const Product = require('./models/productModel');
+const Sale = require('./models/salesModel');
+const Customer = require('./models/customerModel');
 
 // ----- MongoDB Connection -----
 mongoose
@@ -31,10 +33,10 @@ mongoose
   .then(() => console.log('MongoDB Connected'))
   .catch((err) => console.error('MongoDB Connection Error:', err));
 
-// ----- Simple test route -----
+// ----- Simple Ping Route -----
 app.get('/ping', (req, res) => res.json({ status: 'ok', message: 'Server is live' }));
 
-// ----- Test product route -----
+// ----- Test Product Route -----
 app.get('/test-product', async (req, res, next) => {
   try {
     const existing = await Product.findOne({ name: 'Test Product' });
@@ -51,10 +53,10 @@ app.get('/test-product', async (req, res, next) => {
 
 // ----- Analytics Routes -----
 const analyticsRoutes = require('./routes/analyticsRoutes');
-app.use('/api/analytics', analyticsRoutes); // Now all analytics routes are under /api/analytics
+app.use('/api/analytics', analyticsRoutes); // All analytics routes under /api/analytics
 
-// ----- Serve React frontend (optional) -----
-// Uncomment if you deploy frontend together with backend
+// ----- Serve React Frontend (Optional) -----
+// Uncomment if frontend is deployed together
 /*
 app.use(express.static(path.join(__dirname, 'frontend/build')));
 app.get('*', (req, res) => {
@@ -62,12 +64,12 @@ app.get('*', (req, res) => {
 });
 */
 
-// ----- Global error handler -----
+// ----- Global Error Handler -----
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: err.message });
 });
 
-// ----- Start server -----
+// ----- Start Server -----
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
