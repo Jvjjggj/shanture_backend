@@ -3,34 +3,43 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const path = require('path');
 
 dotenv.config();
 const app = express();
+
+// ----- Middleware -----
 app.use(express.json());
 
 // ----- Enable CORS for frontend -----
-app.use(cors({
-  origin: process.env.FRONTEND_URL
-}));
+// If FRONTEND_URL is not set, allow all origins (for testing)
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || '*',
+  })
+);
 
 // ----- MongoDB Product Model -----
 const Product = require('./models/productModel');
 
 // ----- MongoDB Connection -----
-mongoose.connect(process.env.MONGO_URI)
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log('MongoDB Connected'))
-  .catch(err => console.error('MongoDB Connection Error:', err));
+  .catch((err) => console.error('MongoDB Connection Error:', err));
 
-// ----- Test route: always works -----
-app.get('/name', (req, res) => {
-  res.json({ status: 'ok' });
-});
+// ----- Simple test route -----
+app.get('/ping', (req, res) => res.json({ status: 'ok', message: 'Server is live' }));
 
 // ----- Test product route -----
 app.get('/test-product', async (req, res, next) => {
   try {
     const existing = await Product.findOne({ name: 'Test Product' });
-    if (existing) return res.json({ message: 'Product already exists', product: existing });
+    if (existing)
+      return res.json({ message: 'Product already exists', product: existing });
 
     const product = new Product({ name: 'Test Product', category: 'Demo', price: 99 });
     await product.save();
@@ -42,7 +51,16 @@ app.get('/test-product', async (req, res, next) => {
 
 // ----- Analytics Routes -----
 const analyticsRoutes = require('./routes/analyticsRoutes');
-app.use('/api/analytics', analyticsRoutes);
+app.use('/api/analytics', analyticsRoutes); // Now all analytics routes are under /api/analytics
+
+// ----- Serve React frontend (optional) -----
+// Uncomment if you deploy frontend together with backend
+/*
+app.use(express.static(path.join(__dirname, 'frontend/build')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend/build', 'index.html'));
+});
+*/
 
 // ----- Global error handler -----
 app.use((err, req, res, next) => {
