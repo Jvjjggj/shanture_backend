@@ -15,7 +15,7 @@ app.use(express.json());
 const allowedOrigins = [
   "http://localhost:3000",       // CRA default
   "http://localhost:3004",       // your custom port
-  "https://shanture-frontend-1-59j9.onrender.com", // deployed frontend
+  "https://frontendshanture.onrender.com", // deployed frontend
 ];
 
 app.use(
